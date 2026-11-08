@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="kitchenassist5">
+
+  <!-- ========================================== -->
+  <!-- 1. PARAMETRELER VE BOYUTLAR                -->
+  <!-- ========================================== -->
+  <xacro:property name="L1" value="0.60" /> <!-- d1: Omuz Link Dikey Boyu (m) -->
+  <xacro:property name="L2" value="0.30" /> <!-- a2: Üst Kol Boyu (m) -->
+  <xacro:property name="L3" value="0.25" /> <!-- a3: Önkol Boyu (m) -->
+  <xacro:property name="d5" value="0.05" /> <!-- d5: Gripper Boyu (m) -->
+  <xacro:property name="DEG2RAD" value="0.017453292519943295" />
+
+  <!-- Malzemeler -->
+  <material name="dark_gray"><color rgba="0.2 0.2 0.2 1.0"/></material>
+  <material name="silver"><color rgba="0.75 0.75 0.75 1.0"/></material>
+  <material name="accent_blue"><color rgba="0.0 0.4 0.8 1.0"/></material>
+
+  <!-- ========================================== -->
+  <!-- 2. BASE LINK VE EKLENEN KİNETİK ZİNCİR     -->
+  <!-- ========================================== -->
+  <link name="world"/>
+  <!-- Robot tabanını dünyaya sabitle -->
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.08" length="0.04"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.08" length="0.04"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+      <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.002" iyz="0" izz="0.003"/>
+    </inertial>
+  </link>
+
+  <!-- JOINT 1 (J1 - Base Yaw) -->
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-90 * DEG2RAD}" upper="${90 * DEG2RAD}" effort="30.0" velocity="2.0"/>
+  </joint>
+
+  <link name="shoulder_link">
+    <visual>
+      <origin xyz="0 0 ${L1/2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="${L1}"/></geometry>
+      <material name="accent_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${L1/2}" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.04" length="${L1}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="1.2"/>
+      <origin xyz="0 0 ${L1/2}" rpy="0 0 0"/>
+      <inertia ixx="0.004" ixy="0" ixz="0" iyy="0.004" iyz="0" izz="0.002"/>
+    </inertial>
+  </link>
+
+  <!-- JOINT 2 (J2 - Shoulder Pitch) -->
+  <joint name="joint2" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 ${L1}" rpy="${-90 * DEG2RAD} 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-90 * DEG2RAD}" upper="${60 * DEG2RAD}" effort="50.0" velocity="2.0"/>
+  </joint>
+
+  <link name="upper_arm_link">
+    <visual>
+      <origin xyz="${L2/2} 0 0" rpy="0 ${90 * DEG2RAD} 0"/>
+      <geometry><cylinder radius="0.035" length="${L2}"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="${L2/2} 0 0" rpy="0 ${90 * DEG2RAD} 0"/>
+      <geometry><cylinder radius="0.035" length="${L2}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="1.2"/>
+      <origin xyz="${L2/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.008" iyz="0" izz="0.008"/>
+    </inertial>
+  </link>
+
+  <!-- JOINT 3 (J3 - Elbow Pitch) -->
+  <joint name="joint3" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="${L2} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-60 * DEG2RAD}" upper="${30 * DEG2RAD}" effort="30.0" velocity="2.5"/>
+  </joint>
+
+  <link name="forearm_link">
+    <visual>
+      <origin xyz="${L3/2} 0 0" rpy="0 ${90 * DEG2RAD} 0"/>
+      <geometry><cylinder radius="0.028" length="${L3}"/></geometry>
+      <material name="silver"/>
+    </visual>
+    <collision>
+      <origin xyz="${L3/2} 0 0" rpy="0 ${90 * DEG2RAD} 0"/>
+      <geometry><cylinder radius="0.028" length="${L3}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.9"/>
+      <origin xyz="${L3/2} 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0008" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
+    </inertial>
+  </link>
+
+  <!-- JOINT 4 (J4 - Wrist Pitch) -->
+  <joint name="joint4" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_link"/>
+    <origin xyz="${L3} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-90 * DEG2RAD}" upper="${90 * DEG2RAD}" effort="15.0" velocity="3.0"/>
+  </joint>
+
+  <link name="wrist_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.025" length="0.06"/></geometry>
+      <material name="accent_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><cylinder radius="0.025" length="0.06"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.4"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.0003" ixy="0" ixz="0" iyy="0.0003" iyz="0" izz="0.0003"/>
+    </inertial>
+  </link>
+
+  <!-- JOINT 5 (J5 - Wrist Roll) -->
+  <joint name="joint5" type="revolute">
+    <parent link="wrist_link"/>
+    <child link="gripper_link"/>
+    <origin xyz="0 0 0" rpy="${-90 * DEG2RAD} 0 ${-90 * DEG2RAD}"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${-180 * DEG2RAD}" upper="${180 * DEG2RAD}" effort="10.0" velocity="3.5"/>
+  </joint>
+
+  <link name="gripper_link">
+    <visual>
+      <origin xyz="0 0 ${d5/2}" rpy="0 0 0"/>
+      <geometry><box size="0.03 0.05 ${d5}"/></geometry>
+      <material name="dark_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${d5/2}" rpy="0 0 0"/>
+      <geometry><box size="0.03 0.05 ${d5}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 ${d5/2}" rpy="0 0 0"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <!-- TOOL FRAME -->
+  <joint name="tool_joint" type="fixed">
+    <parent link="gripper_link"/>
+    <child link="tool_frame"/>
+    <origin xyz="0 0 ${d5}" rpy="0 0 0"/>
+  </joint>
+  <link name="tool_frame"/>
+
+  <!-- ========================================== -->
+  <!-- 3. SENSÖR ENTEGRASYONU (Kamera Sensörü)    -->
+  <!-- ========================================== -->
+  <!-- CAMERA JOINT -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="gripper_link"/>
+    <child link="camera_link"/>
+    <origin
+      xyz="0 0 ${d5}"
+      rpy="${0} ${-90 * DEG2RAD} ${180 * DEG2RAD}"/>
+  </joint>
+
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+      <material name="accent_blue"/>
+    </visual>
+  </link>
+
+  <!-- Kamera Sensörü (Plugin'siz, sadece Gazebo Sensörü) -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="kitchen_camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.7453293</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <!-- ========================================== -->
+  <!-- 4. ROS2_CONTROL & GAZEBO KONTROLÖR EKLENTİSİ -->
+  <!-- ========================================== -->
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <!-- Sitedeki gibi modern Gazebo Sim eklentisini çağırıyoruz -->
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <!-- Başlangıç değeri (15 derece = 0.2618 radyan) olan ekleminiz -->
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position">
+      
+        <param name="initial_value">0.2618</param>
+      
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint4">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint5">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">
+      <!-- Kendi paketi ve kontrolcü dosyanıza yönlendirildi -->
+      <parameters>$(find kitchenassist5_gazebo)/config/controllers.yaml</parameters>      
+    </plugin>
+  </gazebo>
+
+</robot>
+
